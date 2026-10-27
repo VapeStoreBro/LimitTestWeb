@@ -1,0 +1,38 @@
+const PHOTO='https://images.unsplash.com/';
+const items=[
+{id:1,n:'Рамен с курицей',c:'food',p:119,desc:'Ароматная лапша и насыщенный бульон.',tag:'БЕСТСЕЛЛЕР',img:'photo-1569718212165-3a8278d5f624'},
+{id:2,n:'Острый рамен',c:'food',p:139,desc:'Пикантный вкус для любителей острого.',tag:'ПОПУЛЯРНО',img:'photo-1557872943-16a5ac26437e'},
+{id:3,n:'Пицца пепперони',c:'food',p:229,desc:'Хрустящая корочка и много сыра.',tag:'ХИТ',img:'photo-1565299624946-b28f40a0ae38'},
+{id:4,n:'Чизбургер',c:'food',p:199,desc:'Сочный бургер с нежным сыром.',tag:'НОВИНКА',img:'photo-1568901346375-23c9450c58cd'},
+{id:5,n:'Картофельные чипсы',c:'snacks',p:109,desc:'Хрустящий снек для любого вечера.',tag:'СНЕК',img:'photo-1566478989037-eec170784d0b'},
+{id:6,n:'Попкорн',c:'snacks',p:89,desc:'Идеальная компания для фильма.',tag:'СНЕК',img:'photo-1578849278619-e73505b0d7cf'},
+{id:7,n:'Картофель фри',c:'snacks',p:129,desc:'Золотистые ломтики с хрустящей корочкой.',tag:'ХИТ',img:'photo-1573080496219-bb080dd4f877'},
+{id:8,n:'Начос',c:'snacks',p:149,desc:'Кукурузные чипсы для компании.',tag:'СНЕК',img:'photo-1513456852971-30c0b8199d4d'},
+{id:9,n:'Лимонад',c:'drinks',p:99,desc:'Освежающий цитрусовый напиток.',tag:'ОСВЕЖАЕТ',img:'photo-1513558161293-cdaf765edfd4'},
+{id:10,n:'Холодный кофе',c:'drinks',p:159,desc:'Нежный кофе со льдом.',tag:'НАПИТОК',img:'photo-1461023058943-07fcbe16d735'},
+{id:11,n:'Ягодный смузи',c:'drinks',p:179,desc:'Фруктово-ягодное настроение.',tag:'НАПИТОК',img:'photo-1505252585461-04db1eb84625'},
+{id:12,n:'Апельсиновый сок',c:'drinks',p:119,desc:'Сочный и яркий вкус.',tag:'НАПИТОК',img:'photo-1600271886742-f049cd451bba'},
+{id:13,n:'Шоколадное печенье',c:'sweet',p:109,desc:'Нежное внутри, хрустящее снаружи.',tag:'СЛАДКОЕ',img:'photo-1499636136210-6f4ee915583e'},
+{id:14,n:'Шоколадный брауни',c:'sweet',p:149,desc:'Насыщенный шоколадный вкус.',tag:'ДЕСЕРТ',img:'photo-1606313564200-e75d5e30476c'},
+{id:15,n:'Пончики',c:'sweet',p:139,desc:'Воздушные пончики с глазурью.',tag:'ДЕСЕРТ',img:'photo-1551024506-0bccd828d307'},
+{id:16,n:'Круассан',c:'sweet',p:119,desc:'Слоёная выпечка к чаю.',tag:'ВЫПЕЧКА',img:'photo-1555507036-ab1f4038808a'}
+];
+const catNames={food:'Быстрая еда',snacks:'Снеки',drinks:'Напитки',sweet:'Сладости'};
+const $=id=>document.getElementById(id);
+const url=(id,w=600)=>PHOTO+id+'?auto=format&fit=crop&w='+w+'&q=80';
+const fmt=n=>new Intl.NumberFormat('ru-RU').format(n)+' ₽';
+let current='all',query='';
+let cart={};try{const saved=JSON.parse(localStorage.getItem('dorm-market-cart-v2')||'{}');if(saved&&typeof saved==='object'&&!Array.isArray(saved))cart=saved}catch(e){}
+function render(){const found=items.filter(p=>(current==='all'||p.c===current)&&p.n.toLowerCase().includes(query));$('products').innerHTML=found.length?found.map(p=>'<article class="product"><div class="productimage"><img loading="lazy" src="'+url(p.img)+'" alt="'+p.n+'" onerror="this.onerror=null;this.src=\'https://placehold.co/600x450/263325/d6f6a4?text=DORM+MARKET\'"><span class="tag">'+p.tag+'</span></div><div class="productbody"><div class="productcat">'+catNames[p.c]+'</div><h3>'+p.n+'</h3><p class="productdesc">'+p.desc+'</p><div class="productbottom"><strong class="price">'+fmt(p.p)+'</strong><button class="add" aria-label="Добавить '+p.n+'" data-add="'+p.id+'">+</button></div></div></article>').join(''):'<div class="noresults">Ничего не найдено. Попробуй другой запрос.</div>'; }
+function save(){localStorage.setItem('dorm-market-cart-v2',JSON.stringify(cart));renderCart()}
+function add(id){cart[id]=(Number(cart[id])||0)+1;save();notify('Добавлено в корзину')}
+function quantity(id,delta){cart[id]=(Number(cart[id])||0)+delta;if(cart[id]<=0)delete cart[id];save()}
+function renderCart(){const entries=Object.entries(cart).filter(([id,q])=>items.some(p=>p.id===Number(id))&&Number(q)>0);$('cartCount').textContent=entries.reduce((s,[,q])=>s+Number(q),0);$('cartItems').innerHTML=entries.length?entries.map(([id,q])=>{const p=items.find(x=>x.id===Number(id));return '<div class="cartitem"><img src="'+url(p.img,160)+'" alt=""><div class="cartitemtext"><b>'+p.n+'</b><small>'+fmt(p.p*Number(q))+'</small><div class="quantity"><button data-qty="'+id+'" data-delta="-1" aria-label="Убрать одну штуку">−</button><span>'+Number(q)+'</span><button data-qty="'+id+'" data-delta="1" aria-label="Добавить одну штуку">+</button></div></div></div>'}).join(''):'<p style="text-align:center;color:#9da69b;padding:50px 10px">В корзине пока пусто.<br>Добавь что-нибудь вкусное!</p>';$('cartTotal').textContent=fmt(entries.reduce((s,[id,q])=>s+items.find(p=>p.id===Number(id)).p*Number(q),0))}
+function toggleCart(open){$('drawer').classList.toggle('open',open);$('shade').classList.toggle('open',open);document.body.classList.toggle('lock',open);$('drawer').setAttribute('aria-hidden',String(!open))}
+let toastTimer;function notify(s){$('toast').textContent=s;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2500)}
+document.addEventListener('click',e=>{const addBtn=e.target.closest('[data-add]');if(addBtn)add(Number(addBtn.dataset.add));const qtyBtn=e.target.closest('[data-qty]');if(qtyBtn)quantity(Number(qtyBtn.dataset.qty),Number(qtyBtn.dataset.delta));const filter=e.target.closest('[data-filter]');if(filter){current=filter.dataset.filter;document.querySelectorAll('.filter').forEach(b=>b.classList.toggle('active',b.dataset.filter===current));render();if(filter.classList.contains('category'))$('catalog').scrollIntoView({behavior:'smooth'})}});
+$('search').addEventListener('input',e=>{query=e.target.value.trim().toLowerCase();render()});
+$('openCart').onclick=()=>toggleCart(true);$('closeCart').onclick=()=>toggleCart(false);$('shade').onclick=()=>toggleCart(false);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')toggleCart(false)});
+$('checkout').onclick=()=>{if(!Object.keys(cart).length){notify('Сначала добавь товары');return}cart={};save();toggleCart(false);notify('Демо-заказ оформлен! Оплата не требуется.')};
+render();renderCart();
